@@ -1,0 +1,18 @@
+{
+  "packet_builder": {
+    "fingerprint": "ba8560293f1375489c8f4546e7519183aa9e6b9474c83275343eff852538c2d1",
+    "version": "packet-v0.7.1"
+  },
+  "request_builder": {
+    "fingerprint": "3a3928acaff70bb4fc47a1cfa4d4bf820aa4b5a4ae4e2a883ec861509fe03f0b",
+    "version": "request-v0.8.0"
+  },
+  "store": {
+    "fingerprint": "be1900ba2e115b65e8d7148fbfe5d74b038b57c5cfc5455d95b35cd92222143c",
+    "version": "store-v0.1.1"
+  },
+  "validator": {
+    "fingerprint": "ba860090aa5d876978e377358a9c1a58cab7894c31c89c99b386b40eb1907fa4",
+    "version": "validator-v0.9.1"
+  }
+}

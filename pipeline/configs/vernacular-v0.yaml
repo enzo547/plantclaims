@@ -1,0 +1,10 @@
+# Common-name source lists for organism normalisation (plantclaims_pipeline/vernacular.py).
+version: vernacular-v0.1
+sources:
+  grin:
+    name: GRIN Taxonomy (USDA ARS), GBIF-hosted ColDP copy
+    url: https://hosted-datasets.gbif.org/datasets/grin.zip
+    host: hosted-datasets.gbif.org
+    licence_as_reported: CC0 1.0 (GBIF dataset record, 2026-09-27 assessment); the archive's own metadata is recorded at fetch
+    timeout_seconds: 120
+    max_bytes: 60000000

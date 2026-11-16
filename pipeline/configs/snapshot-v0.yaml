@@ -1,0 +1,29 @@
+version: snapshot-v0.1
+scope_version: scope-v0.6
+role: candidate_pool_from_public_snapshot_not_corpus_membership
+p0_run: p0-20260910T090557-e5f7a0dd
+source:
+  bucket_https: https://openalex.s3.amazonaws.com
+  entity: works
+  format: jsonl                       # gzip JSON Lines; one work object per line, same shape as the API
+  manifest_key: data/jsonl/works/manifest.json
+  deleted_ids_key: data/jsonl/works/deleted_ids.csv
+  note: public snapshot is replaced quarterly; the frozen manifest date is this corpus version's as_of
+predicate:
+  taxonomy_entry: any_topic           # any of a work's topics maps to a core subfield
+  core_subfields: [Plant Science, Agronomy and Crop Science, Horticulture, Forestry]
+  type: article
+  abstract_required_at_filter: false  # exclusion only after recovery; abstract_status is recorded, never used to drop here
+  exclude_xpac: false                 # is_xpac is recorded; XPAC records with a core topic stay visible for review
+download:
+  parallel: 16
+  max_retries_per_file: 3
+  retry_pause_seconds: 5
+  chunk_bytes: 1048576
+  timeout_seconds: 120
+  flush_every_files: 20
+filter:
+  workers: 32
+  decompressor: pigz                  # falls back to Python gzip when unavailable
+index:
+  batch_rows: 5000

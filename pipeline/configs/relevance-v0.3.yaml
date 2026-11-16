@@ -1,0 +1,17 @@
+# Scope judgment config v0.3: labels and output schema. Its rules text (relevance-prompt-v0.3.txt) is embedded verbatim in the extraction prompt.
+variant: v0.3
+prompt_file: configs/relevance-prompt-v0.3.txt
+schema_file: configs/relevance-schema-v0.json
+schema_version: plant-relevance-v0.1
+prompt_version: plant-relevance-prompt-v0.3
+batch_size: 8
+max_input_papers: 300
+max_source_bytes: 150000000
+max_response_bytes: 1000000
+max_imports: 128
+reason_codes:
+  core: [direct_plant_research, plant_interaction, plant_method_resource, plant_review]
+  adjacent: [green_algae, soil_without_plant_endpoint, land_cover_only, pathogen_without_host, other_boundary]
+  off_topic: [human_health_or_diet, industrial_material, nonbiological_plant, no_plant_question]
+  insufficient_evidence: [missing_text, abstract_index_error, ambiguous_subject, language_unresolved, identity_unresolved, unclear_endpoint]
+next_actions: [human_review, obtain_abstract, repair_abstract, obtain_fulltext, resolve_identity, translate_or_review]

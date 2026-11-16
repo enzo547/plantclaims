@@ -1,0 +1,37 @@
+# Gene normalisation against NCBI Gene (plantclaims_pipeline/genes.py): source files and matching rules.
+version: genes-v0.9                               # v0.9: the `compound` field (claims-v0.7+) is placed too — ChEBI only
+source:
+  name: NCBI Gene
+  base_url: https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/
+  files: [Plants/All_Plants.gene_info.gz]          # the default download (phase 1: plants)
+  available_files: [Plants/All_Plants.gene_info.gz, Fungi/All_Fungi.gene_info.gz, Viruses/All_Viruses.gene_info.gz]   #: + fungi, viruses
+  listings: [Archaea_Bacteria/]                    # directory listings saved only to size a download (the bacteria files are measured, not fetched)
+  licence_as_reported: NCBI molecular databases — no restrictions on use or distribution (NCBI website and data usage policies); recorded at fetch
+  timeout_seconds: 300
+  max_bytes: 3000000000                            # a response larger than this is refused
+index:
+  name_classes:
+    symbol: Symbol
+    nomenclature_symbol: Symbol_from_nomenclature_authority
+    synonym: Synonyms
+    locus_tag: LocusTag
+    full_name: Full_name_from_nomenclature_authority
+    description: description
+  skip_symbols: '^LOC[0-9]+$'                      # NCBI's placeholder symbols (LOC + GeneID) name no gene in a text
+  skip_descriptions: '^(uncharacterized|hypothetical)'
+match:
+  field: gene
+  compound_field: compound                         # v0.9: this field's parts are looked up in ChEBI only (the prompt keeps genes, proteins and enzymes out of it)
+  organism_fields: [taxon, interactor, interactor_2]   # where the conditioning organism comes from (taxa layer): the first field is the claim organism, the others interacting organisms (verify a prefix, second-stage lookup)
+  list_separators: [', ', '; ', ' and ', ' & ', ' as well as ', ',']   # a list is split only when every part holds a letter (chemical locants stay whole)
+  trailing_words: [gene, genes, protein, proteins, locus, loci, family, families, homolog, homologs, homologue, homologues, transcripts, marker, markers]
+  plural_words: [genes, proteins, loci, families, homologs, homologues, transcripts, markers]   # a group, not one gene: typed, never looked up
+  prefix:
+    pattern: '^(?P<prefix>[A-Za-z][a-z]{1,2})(?P<rest>[A-Z][A-Za-z0-9].*)$'   # MdATG8i, BnaERF1, HvCBF2, TcPR-1g
+    min_rest: 2
+  symbol_form: '^(?:(?=.*(?:[0-9]|[A-Z].*[A-Z]))[A-Za-z0-9][A-Za-z0-9.*:/+-]{0,23}|[a-z]{3,4}[A-Z][0-9]*)$'   # one token with a digit or two capitals (HY5, NAXT1, SOD), or the bacterial form malZ / otsB
+  types:                                           # word forms → type (checked in this order on the cleaned part; case-insensitive)
+    sequence_feature: '\b(r?DNA|rRNA|ITS[12]?|retrotransposons?|transposons?|transposable elements?|spacers?|introns?|promoters?|LTR|satellites?|repeats?|intergenic)\b'
+    qtl_marker: '(^q[A-Z][A-Za-z0-9]*$)|\b(QTLs?|markers?|SSRs?|SNPs?|loci|locus|alleles?|haplotypes?)\b'
+    gene_family: '\b(genes|gene famil(y|ies)|famil(y|ies)|subfamil(y|ies)|isoforms?|homologs?|homologues?|paralogs?|orthologs?)\b|-box\b'
+  greek: {α: alpha, β: beta, γ: gamma, δ: delta, ε: epsilon, κ: kappa, λ: lambda, ω: omega, ρ: rho, σ: sigma}

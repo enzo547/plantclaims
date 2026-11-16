@@ -1,0 +1,148 @@
+# Scope of the release: which papers are selected (snapshot filter and candidate pool), the scope labels, and the research
+# areas with the area rules the program executes.
+version: scope-v0.6
+as_of_policy: each corpus version freezes as_of_date at its collection date
+as_of_date: null            # set per corpus version at collection time
+start_date: null            # no hard start year; all retrievable years enter the metadata layer
+
+first_release_layers:
+  paper_search: all included papers
+  source_traceability: all included papers (source records, discovery events, identity relations)
+  evidence_lookup: abstract for all; licensed full text where obtained
+  claims_abstract_level: all included papers          # every paper gets abstract-level claim extraction
+  claims_fulltext_level: OA articles with processable full text  # denominators reported separately
+  claim_acceptance: G5 applies to both depths; abstract-level and fulltext-level metrics reported separately
+
+candidate_pool:
+  taxonomy_entry: any_topic            # topics.subfield.id in core union; primary_topic kept as a stratum
+  core_subfields: [Plant Science, Agronomy and Crop Science, Horticulture, Forestry]
+  work_type: [article]                 # OpenAlex type=article (journal and repository articles)
+  exclude_xpac: true
+  xpac_policy:
+    recorded_in_snapshot_index: true   # snapshot matches keep is_xpac rows; exclusion happens in the selection stage only
+    grey_literature_later: by_source   # theses/extension/Plazi only via targeted source-level evaluation, primary core topic score >= 0.5
+    abstract_recovery_source: true     # same-title XPAC copies may supply a missing abstract, never membership
+  abstract_required: true              # membership requires an abstract AFTER recovery attempts
+  abstract_recovery_order: [openalex_inverted_index, europepmc, crossref, publisher_page]
+  abstract_unavailable_handling: excluded_with_reason_code_abstract_unavailable   # auditable, re-checkable
+  other_types_policy:                  # dissertations, book chapters, datasets, reports
+    metadata_only: true
+    fulltext_or_claims: false
+    note: later extension; counted as coverage limitation
+
+core_scope: terrestrial plants and research with direct plant outcomes
+adjacent_scope:
+  - green algae
+  - soil research without a plant endpoint
+  - land-cover-only mapping
+  - plant pathogen biology without host experiments
+  - justified nearby boundaries
+excluded_from_core: [human-only plant-extract or diet studies, industrial plant-derived materials without a plant question, nonbiological "plant", no plant research question]
+decision_order: [core, named_adjacent_categories, off_topic]   # absence of a plant endpoint alone decides nothing
+labels: [core, adjacent, off_topic, insufficient_evidence]
+
+language:
+  metadata_filter: null                # no language exclusion at discovery
+  relevance_assessment: any language, record language field
+  claim_extraction: [en]               # non-English counted as unprocessed, not excluded
+
+document_forms:
+  research_article: {metadata: true, fulltext: true, claims: true}
+  review: {metadata: true, fulltext: false, claims: false, note: revisit later; review restatements never count as original results}
+  preprint: {metadata: true, fulltext: true, claims: true, version_link: grouped with the published version; published version displayed first}
+  non_article_types: {metadata: true, fulltext: false, claims: false}
+
+citation_floor: null
+oa_required_for_membership: false     # OA only gates fulltext-level claims, never paper membership
+doi_required_for_membership: false
+
+# Year strata are to be re-cut at stage D from the measured distribution (2010 boundary removed).
+year_strata: pending_stage_D
+
+buckets:
+  B1: molecular_genetics_genomics
+  B2: development_reproduction_morphology
+  B3: physiology_metabolism_abiotic_stress
+  B4: plant_interactions_biotic_stress
+  B5: breeding_agronomy_horticulture
+  B6: ecology_evolution_diversity
+  B7: woody_plants                       # woody only; herbaceous perennials are not B7
+  B8: phenotyping_methods_resources
+
+# ---- research areas: structure ----
+bucket_rules:
+  structure: flat_multi_label            # no primary/secondary area, no layers, no fixed maximum
+  earned_by_result: true                 # rule 1: an area is given only where a claim states a result in it (not a passing mention, not mere use of material or tools)
+  cited_background_claims: tagged_by_content_excluded_from_paper_level
+  paper_level: union_of_accepted_claims_excluding_cited_background   # rule 2: never judged separately; a paper earns an area only through its own result claims
+  paper_level_fallback: relevance_buckets_of_the_answer   # only for a core paper without a contributing accepted claim
+  objective_areas:                       # rule 3
+    B7: study organism of the claim is woody, whatever the question is
+    B8: {set_by: program, when_claim_kind: method_resource_result, otherwise: removed}
+  classify_by: the research question the claim answers   # not keywords, venue or OpenAlex subject labels
+  derived_from: 1,000-abstract pilot (model assignments, unreviewed); that sample is development material for these rules, never a held-out test of area assignment
+
+# ---- research areas: definitions and boundaries ----
+bucket_guide:
+  B1:
+    name: Molecular genetics & genomics
+    definition: The result is at the level of genes, genomes or their regulation.
+    include: [gene or locus identification / mapping / cloning / function, 'transcriptional, epigenetic or protein-level regulation', 'genome, transcriptome and other omics resources; comparative genomics',
+              'QTL mapping, GWAS and genetic architecture, including classical quantitative genetics without molecular data (heritability, major-gene plus polygene models)', molecular results of transgenics and genome editing]
+    exclude: [a mutant or transgenic line used only as material for a physiological or agronomic question, 'an expression level reported only as a physiological indicator (B3; add B1 when the gene-level finding is itself the result)',
+              'molecular markers used only as a tool to describe diversity (breeding material: B5; wild populations and landraces: B6; add B1 only for locus- or gene-level results)']
+  B2:
+    name: Development, reproduction & morphology
+    definition: Plant structure and how it forms and progresses through the life cycle.
+    include: [morphology and anatomy, 'organogenesis, growth and developmental progression, phase transitions, phenology', 'flowering and reproduction: pollen, ovule, embryo, pollination-to-fertilisation, fruit and seed set, seed development', organ regeneration and morphogenesis in tissue culture]
+    exclude: ['height, tiller number and similar traits reported only as yield components of an agronomic trial (B5)', morphology used only to tell taxa apart (B6), germination rate or vigour as a response to environment or treatment (B3),
+              'growth measures (biomass, height, root or shoot length, leaf area, extension growth, growth rate) reported as a response to an abiotic factor or treatment (B3; B4 when the factor is another organism; B5 where they are yield components of an agronomic trial; add B2 only when the result states how an organ or structure forms or when a developmental stage or phase is reached)']
+  B3:
+    name: Physiology, metabolism & abiotic stress
+    definition: Plant function and its response to the non-living environment.
+    include: ['photosynthesis, water relations, mineral nutrition and nutrient use, hormones and signalling', 'primary and secondary metabolism, phytochemistry and composition, including isolation and identification of constituents', postharvest physiology and storage quality,
+              'responses and tolerance to drought, salinity, temperature, light, heavy metals, CO2, ozone and other abiotic factors']
+    boundaries: ['with B5: a trial reporting only yield and agronomic traits is B5 alone; add B3 when a physiological process or mechanism indicator (nutrient content, gas exchange, enzyme activity, metabolites) is itself a result',
+                 'with B4: a physiological response to a biotic stress is B4; add B3 only when the physiological mechanism is itself the result']
+  B4:
+    name: Plant interactions & biotic stress
+    definition: Interactions of plants with other organisms and the resulting stress and its control.
+    include: ['pathogens: fungi, bacteria, viruses, phytoplasmas, nematodes', 'insect pests and herbivores; parasitic plants; weeds competing with a crop', 'symbionts and microbiomes: mycorrhiza, rhizobia, endophytes, rhizosphere and phyllosphere communities',
+              'disease diagnosis and first reports, host range, resistance evaluation, incidence and epidemiology', biological and chemical control efficacy, allelopathy, pollinator–plant relations]
+    boundaries: ['with B6: weed–crop competition and weed control are B4 (usually with B5); ecology of weed communities or seed banks without an effect on a crop is B6', 'pathogen biology without a host experiment is not core at all (adjacent: pathogen_without_host)']
+  B5:
+    name: Breeding, agronomy & horticulture
+    definition: Applied research whose result serves the production or improvement of cultivated plants.
+    include: ['cultivar development and release, germplasm evaluation, cultivar comparison', combining-ability analysis for selection, genetic diversity of breeding material,
+              'crop management: sowing date, density, fertilisation, irrigation, tillage, rotation and intercropping, protected cultivation and substrates, growth regulators in production', yield and quality trials, propagation and nursery practice, production-system evaluation, agronomic recommendations]
+    exclude: [a mechanistic study that merely uses a crop species as material]
+    note: B5 is the applied context; add it whenever the result concerns a cultivated plant in a production setting and addresses production, whatever other area applies.
+  B6:
+    name: Ecology, evolution & diversity
+    definition: Patterns and processes at population, species, community and ecosystem level.
+    include: ['taxonomy and new taxa, floras, vegetation description', 'species distribution, rare and invasive species', population ecology and population genetics, 'community composition and succession; restoration', phylogeny and evolution,
+              genetic diversity of wild populations and landraces, effects of climate and land use on vegetation]
+    boundaries: ['land-cover-only mapping is not core at all (adjacent: land_cover_only)',
+                 'with B5: for landraces, genebank accessions and crop wild relatives, evaluating or screening them for agronomic, quality, resistance or tolerance traits is B5 (with the area of the trait); their genetic diversity, population structure, origin or domestication history is B6 — add B5 as well when the claim itself states the use in breeding (parents or a core collection chosen from the result)',
+                 'with B5: for semi-domesticated or wild-harvested species, population ecology and diversity are B6; cultivation and production practice are B5']
+  B7:
+    name: Woody plants
+    definition: The study organism of the claim is a tree, shrub, woody vine or other woody perennial.
+    include: [forest and plantation species, fruit and nut trees, 'woody cash crops: tea, coffee, cacao, rubber', urban and ornamental trees, bamboos and palms]
+    exclude: ['herbaceous perennials: alfalfa, forage grasses, sugarcane, banana, ginseng']
+    note: Objective area (rule 3). Give it whenever the organism qualifies, together with the area(s) of the question (a new apple cultivar is B5 + B7).
+  B8:
+    name: Methods & resources
+    definition: The claim reports the evaluation or release of a method, tool, model, dataset or material resource on real plant material or data.
+    note: Objective area (rule 3), set by the program from the claim kind method_resource_result; never supplied by the model. The label phenotyping_methods_resources is kept.
+
+existing_reviews:
+  boundary_12_and_candidates_32: development_and_regression_only   # never holdout
+  remaining_201_first_reviews: paused_until_stage_E
+
+annotation:
+  primary_reviewer: null
+  second_reviewer: null
+  sentinel_custodian: null
+  reference_status: pending
+  split_status: not_created

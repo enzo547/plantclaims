@@ -1,0 +1,15 @@
+# Chunk plan of the full run (plantclaims_pipeline/chunks.py): seeded random order of the extraction frame, chunk size.
+version: chunking-v0.1
+salt: plantinfra-chunk-order-v0.1       # changing the salt is a different plan: create a new version, never re-cut an existing plan
+frame:
+  pool: pool-20260914T114334-3599761a
+  sample_run: sample-20260917T122811-324bbc36
+calibration_size: 2000                   # chunk 0: the first groups of the order until at least this many papers
+chunk_size: 50000                        # later chunks: consecutive groups until at least this many papers; a group is never split
+grouping:                                # "same work, same chunk": records that share a normalised DOI are one group
+  key: doi
+  exclude_doi_prefixes: ['10.13039/']    # Crossref Funder Registry ids recorded as a work DOI (58 unrelated papers share one)
+  max_group_size: 5                      # a larger DOI group is treated as a data error: its members stay single (listed in the summary)
+  title_grouping: not_done
+flags:                                   # papers of the development sample keep their place in the order and carry a flag (never moved or dropped)
+  pilot_sample: {source: sample_run}

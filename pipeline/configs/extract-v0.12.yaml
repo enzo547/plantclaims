@@ -1,0 +1,42 @@
+# Extraction specification of the November 2026 release: prompt v0.15, claim schema v0.9, research-area scope v0.6.
+version: extract-v0.12
+role: development_candidates_not_gold
+sample_run: null                       # pilot_sample run (sample-...) — set on the command line, frozen in the manifest
+relevance_variant: v0.3
+relevance_config: configs/relevance-v0.3.yaml
+relevance_prompt: configs/relevance-prompt-v0.3.txt
+claims_schema: configs/claims-v0.9.yaml
+prompt: configs/extract-prompt-v0.15.txt
+bucket_scope: configs/scope-v0.6.yaml   # research areas: bucket labels and bucket_rules go into the registry
+gate: core_only                        # claims/profile are produced only for label == core
+input_fields: [paper_id, text_sha256, publication_year, blocks]   # blocks = title + abstract (block_id + cleaned text only); never DOI, authors, venue, citations, OA, topics
+text_cleaning:                         # applied when the packet is built; every cleaned character keeps its raw [start, end) span (plantclaims_pipeline/textclean.py)
+  version: clean-v0.1
+  passes: 2                            # second pass handles entity-encoded markup such as &lt;i&gt;
+  tags: [i, b, u, em, strong, italic, bold, sup, sub, sc, scp, span, font, p, br, div, title, sec, label, a, xref, ext-link, tex, tex-math, inline-formula, list, list-item, abstract, h1, h2, h3, h4, h5, h6]
+max_attempts: 2                        # 1 = no retry; 2 = one validator-feedback retry per paper
+schema_profile: per_kind               # per_kind (kind-specific required fields in the JSON schema) | flat (fallback if the API rejects the schema as too complex)
+profile_enabled: false
+profile:                               # kept for the full-text stage
+  study_type: [experimental, observational, modeling, method_development, resource, review, other]
+  items: [research_question, design_setting, main_conclusions, limitations, future_directions]
+  lists: [main_conclusions, limitations, future_directions]
+model: claude-sonnet-5-5
+effort: high
+max_tokens: 32000                      # extract-v0.12: ~250 tokens per claim x 20 claims + adaptive thinking; only used tokens are billed
+mode: batch                            # batch (Message Batches, 50% price) | sync (one messages.create per paper)
+cache_ttl: 1h
+batch_max_bytes: 200000000             # store jobs (`job submit`): a Message Batch is cut by bytes first — the API limit is 256 MB and every request repeats ~41 KB of prompt + registry + schema
+batch_max_requests: 50000              # ... and by request count (API limit 100,000)
+spend_cap_usd: 10.0
+prices:
+  checked_on: '2026-09-24'
+  sync:
+    claude-opus-5:   {input: 5.0,  output: 25.0, cache_read: 0.5,  cache_write: 10.0}
+    claude-sonnet-5: {input: 2.0,  output: 10.0, cache_read: 0.2,  cache_write: 4.0}
+    claude-haiku-4-5: {input: 1.0, output: 5.0,  cache_read: 0.1,  cache_write: 2.0}
+  batch:                               # Message Batches: 50% of sync
+    claude-opus-5:   {input: 2.5,  output: 12.5, cache_read: 0.25, cache_write: 5.0}
+    claude-sonnet-5: {input: 1.0,  output: 5.0,  cache_read: 0.1,  cache_write: 2.0}
+    claude-haiku-4-5: {input: 0.5, output: 2.5,  cache_read: 0.05, cache_write: 1.0}
+max_response_bytes: 2000000

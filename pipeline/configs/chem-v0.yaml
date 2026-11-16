@@ -1,0 +1,21 @@
+# Compound normalisation against ChEBI (plantclaims_pipeline/chem.py): source files, index statuses and name types.
+version: chem-v0.1
+source:
+  name: ChEBI
+  base_url: https://ftp.ebi.ac.uk/pub/databases/chebi/
+  host: ftp.ebi.ac.uk
+  files: [flat_files/compounds.tsv.gz, flat_files/names.tsv.gz, flat_files/relation.tsv.gz, flat_files/relation_type.tsv.gz, flat_files/status.tsv.gz,
+          flat_files/chemical_data.tsv.gz, flat_files/LICENSE, flat_files/README]   # the ChEBI 2.0 flat files (layout read from listing runs chemdump-20260927T121108-f3f20297 / -121123-c4663328;
+                                                   # the old Flat_file_tab_delimited/ answered 404 in run chemdump-20260927T121059-49ed180e)
+  available_files: [README, flat_files/compounds.tsv.gz, flat_files/names.tsv.gz, flat_files/relation.tsv.gz, flat_files/relation_type.tsv.gz,
+                    flat_files/status.tsv.gz, flat_files/chemical_data.tsv.gz, flat_files/LICENSE, flat_files/README]
+  listings: ['', Flat_file_tab_delimited/, ontology/, flat_files/]   # '' = the ChEBI root directory (the 2026 layout is read from it before choosing files)
+  licence_as_reported: CC BY 4.0 (ChEBI licence statement); verified at fetch
+  timeout_seconds: 300
+  max_bytes: 2000000000
+index:
+  statuses: [CHECKED, OK]                          # SUBMITTED entries (not curated) are left out
+  name_types: [NAME, SYNONYM, IUPAC NAME, INN, UNIPROT NAME]   # NAME = the entity's own ChEBI name (compounds.tsv); BRAND NAME is left out
+  class_relation: is_a                             # kept for the record: `has_members` counts entities filed under an entity (is_a, child → parent)
+  class_rule: no_formula                           # a class ("flavonoid", "tannin", "lipid") is an entity without a molecular formula in chemical_data;
+                                                   # an entity with a formula is one compound even when stereoisomers are filed under it (trehalose, glucose)

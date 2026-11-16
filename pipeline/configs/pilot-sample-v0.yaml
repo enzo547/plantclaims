@@ -1,0 +1,42 @@
+# Stratified seeded draw from the candidate pool (plantclaims_pipeline/sample.py); its frame is the paper set the full run extracts.
+version: pilot-sample-v0.2
+role: unlabeled_pilot_sample        # not gold, not corpus membership, not a uniform population sample (unequal inclusion probabilities)
+pool: null                          # candidate_pool run id (pool-...) — set on the command line, frozen in the manifest
+seed: 20260917
+target: 1000
+min_per_cell: 3
+frame:                              # applied on top of the pool's frozen rule_sql (index layer)
+  abstract_status: [reconstructed]  # has_abstract=1 also covers invalid_index rows whose text cannot be rebuilt; those are not "with abstract"
+  language: [en]
+  exclude_retracted: true
+abstract_rule:                      # applied to the reconstructed text (raw-file scan); failures are recorded with reason codes
+  min_chars: 120                    # reason too_short_chars
+  min_words: 20                     # reason too_short_words; a word is a whitespace token containing a letter or digit
+  placeholder_patterns:             # [reason_code, regex]; case-insensitive search; any hit excludes
+    - [no_abstract, '\b(no|not)\s+abstract|abstract\s+(is\s+)?(not\s+)?(available|provided)|abstract\s+unavailable|\bnot\s+available\b|preview has been provided']
+    - [repository_flag, '^(international audience|peer reviewed|published|phd|info:eu-repo\S*)\.?$']
+    - [plazi_upload, 'uploaded by plazi']
+    - [digitization_note, 'digitized as part of']
+    - [bracket_only, '^\[.*\]$']
+    - [truncated_preview, '\[\.\.\.\]\s*$']
+  citation_only: {pattern: '\bdoi\s*:|10\.\d{4,}/', max_chars: 300}   # reason citation_only: a DOI/citation string standing in for an abstract
+strata:
+  primary_groups:                   # OpenAlex primary_topic.subfield id (a machine label, versioned by the snapshot date)
+    PlantSci: ['1110']
+    Agronomy: ['1102']
+    Horticulture: ['1108']
+    Forestry: ['1107']
+    NonCore: other                  # any other (or null) primary subfield; these rows entered the pool through a secondary topic
+  year_eras:                        # [label, first_year, last_year]; null = open end
+    - [pre1950, null, 1949]
+    - [y1950_79, 1950, 1979]
+    - [y1980_99, 1980, 1999]
+    - [y2000_09, 2000, 2009]
+    - [y2010_19, 2010, 2019]
+    - [y2020p, 2020, null]
+  year_missing_label: Ymissing      # publication_year null → its own era (the 7th)
+  year_suspect_below: 1800          # kept in pre1950, flagged year_suspect (scan-archive date errors such as 1019)
+allocation: proportional_largest_remainder_with_floor
+shortfall_policy: cell_population_below_floor_takes_all_its_rows_and_the_deficit_is_redistributed_proportionally_with_an_override_record
+selection: sha256(json({seed, openalex_id})) ascending within each cell; ties broken by openalex_id
+scan: {workers: 32, decompressor: pigz}     # raw-file scan for the abstract rule; pigz falls back to Python gzip

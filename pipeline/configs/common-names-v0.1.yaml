@@ -1,0 +1,39 @@
+# Common-name table for organism matching, consulted only for values that NCBI names and every other rule leave unresolved.
+version: common-names-v0.1
+approval:
+  approved_by: assistant (claude-opus-5-5) on the maintainer's delegation
+  date: "2026-09-27"
+  human_review: not_performed
+  rule: "genus by default; species where the English name denotes one species in plant-science literature and GRIN offers exactly that species under the name"
+source:
+  name: GRIN Taxonomy (USDA ARS), GBIF-hosted ColDP, version 2026-09-20
+  fetch_run: vernac-20260927T091717-78b1e1ec
+  candidate_run: vcand-20260927T091859-5637013b
+  licence: "archive metadata: unspecified; GBIF dataset record: CC0; attribute USDA ARS GRIN-Global when shown"
+rejected:
+  - name: orchid
+    reason: GRIN places the name on "Unident-Orchidaceae spp.", which the backbone lacks; a family-level mapping would not be a GRIN candidate
+entries:                                           # level: species | genus | genus_of_grin_species (GRIN lists one species; the genus taken by an NCBI lookup)
+  - {name: "alder", taxid: 3515, ncbi_name: "Alnus", level: genus, grin: "Alnus", reason: "genus default"}
+  - {name: "blackberry", taxid: 23216, ncbi_name: "Rubus", level: genus, grin: "Rubus spp.", reason: "genus default"}
+  - {name: "clover", taxid: 3898, ncbi_name: "Trifolium", level: genus, grin: "Trifolium", reason: "genus default"}
+  - {name: "grain sorghum", taxid: 4558, ncbi_name: "Sorghum bicolor", level: species, grin: "Sorghum bicolor subsp. bicolor", reason: "the grain crop Sorghum bicolor"}
+  - {name: "grapevine", taxid: 3603, ncbi_name: "Vitis", level: genus_of_grin_species, grin: "Vitis vinifera", reason: "genus default; GRIN lists only Vitis vinifera under this name"}
+  - {name: "jarrah", taxid: 183836, ncbi_name: "Eucalyptus marginata", level: species, grin: "Eucalyptus marginata", reason: "the name of one species (Eucalyptus marginata)"}
+  - {name: "kodo millet", taxid: 173849, ncbi_name: "Paspalum scrobiculatum", level: species, grin: "Paspalum scrobiculatum", reason: "the name of one species (Paspalum scrobiculatum)"}
+  - {name: "lettuce", taxid: 4236, ncbi_name: "Lactuca sativa", level: species, grin: "Lactuca sativa", reason: "the crop name; wild lettuces are always qualified (prickly, wild)"}
+  - {name: "lily", taxid: 4688, ncbi_name: "Lilium", level: genus, grin: "Lilium", reason: "genus default"}
+  - {name: "lupin", taxid: 3869, ncbi_name: "Lupinus", level: genus, grin: "Lupinus", reason: "genus default"}
+  - {name: "melon", taxid: 3656, ncbi_name: "Cucumis melo", level: species, grin: "Cucumis melo", reason: "the crop name for Cucumis melo; other melons are qualified (watermelon, bitter melon)"}
+  - {name: "oak", taxid: 3511, ncbi_name: "Quercus", level: genus, grin: "Quercus", reason: "genus default"}
+  - {name: "olive", taxid: 4146, ncbi_name: "Olea europaea", level: species, grin: "Olea europaea", reason: "the crop name for Olea europaea"}
+  - {name: "persimmon", taxid: 13492, ncbi_name: "Diospyros", level: genus, grin: "Diospyros", reason: "genus default"}
+  - {name: "pigeonpea", taxid: 3821, ncbi_name: "Cajanus cajan", level: species, grin: "Cajanus cajan", reason: "the name of one species (Cajanus cajan)"}
+  - {name: "pine", taxid: 3337, ncbi_name: "Pinus", level: genus, grin: "Pinus", reason: "genus default"}
+  - {name: "ryegrass", taxid: 4520, ncbi_name: "Lolium", level: genus, grin: "Lolium", reason: "genus default"}
+  - {name: "spruce", taxid: 3328, ncbi_name: "Picea", level: genus, grin: "Picea", reason: "genus default"}
+  - {name: "subterranean clover", taxid: 3900, ncbi_name: "Trifolium subterraneum", level: species, grin: "Trifolium subterraneum", reason: "the name of one species (Trifolium subterraneum)"}
+  - {name: "sunflower", taxid: 4232, ncbi_name: "Helianthus annuus", level: species, grin: "Helianthus annuus", reason: "the crop name for Helianthus annuus; other Helianthus species are qualified"}
+  - {name: "upland rice", taxid: 4530, ncbi_name: "Oryza sativa", level: species, grin: "Oryza sativa", reason: "an ecotype of cultivated rice; NCBI already places \"rice\" on Oryza sativa"}
+  - {name: "willow", taxid: 40685, ncbi_name: "Salix", level: genus, grin: "Salix", reason: "genus default"}
+  - {name: "zoysiagrass", taxid: 38721, ncbi_name: "Zoysia", level: genus_of_grin_species, grin: "Zoysia matrella", reason: "genus default; GRIN lists only Zoysia matrella under this name"}

@@ -1,0 +1,43 @@
+# Abstract-level claim schema v0.9 used for the release: claim kinds, fields, vocabularies and the claim budget per abstract.
+schema_version: claims-v0.9
+supersedes: claims-v0.8                # v0.2 stays the compact form of the frozen v0.1 development run
+level: abstract
+role: development_candidates_not_gold
+kinds: [observation, intervention_effect, association, mechanism_assertion, method_resource_result, recommendation]
+epistemic_status: [observed, author_interpretation, hypothesis]
+origin: [original_result, review_summary, cited_background]
+polarity: [positive, negative, null_effect, mixed, not_applicable]
+statistical_conclusion: [significant, not_significant, not_reported, not_applicable]
+basis: [measured, simulated, projected, not_applicable]   # how the stated result was obtained; orthogonal to epistemic_status
+basis_definitions:
+  measured: result of an experiment, survey, observation or of analysing collected data, specimens or sequences; includes the measured performance of a method
+  simulated: output of a process, statistical, theoretical or analytical model (crop or ecosystem simulators, docking, in-silico scenarios) rather than a direct measurement
+  projected: model output for a future period or a hypothetical scenario (climate scenarios, range projections)
+  not_applicable: recommendation, taxonomic or nomenclatural act, description of a resource, or a review statement without a single basis
+input_issues: [non_english_text, truncated_text, boilerplate_or_no_abstract, ocr_or_encoding_damage, title_abstract_mismatch, internally_inconsistent]   # paper level, inside the relevance object; [] when the text is fine
+fields: [taxon, material, gene, compound, organ_stage, treatment, setting, comparator, outcome, direction, value, qualifier, interactor, interactor_role, interactor_2, interactor_2_role]   # no `unit`: value keeps its unit as written
+enum_fields:                           # value is a controlled label (an interpretation), not a literal; it must still cite the evidence naming the interactor
+  interactor_role: [pathogen, pest, symbiont, host, parasite, weed, pollinator, herbivore, biocontrol_agent, other]
+  interactor_2_role: [pathogen, pest, symbiont, host, parasite, weed, pollinator, herbivore, biocontrol_agent, other]
+missing_codes: {nr: not_reported, na: not_applicable, un: unresolved}
+default_missing: not_reported          # a field absent from both f and miss means the abstract does not report it
+required_by_kind:                      # each listed field must be present in f OR carry an explicit miss code; omission quarantines the claim
+  intervention_effect: {all: [taxon, treatment, comparator, outcome, direction]}
+  association: {all: [taxon, outcome, direction], any: [treatment, gene, compound, material, comparator, setting, interactor, organ_stage]}
+  observation: {all: [taxon, outcome]}
+  mechanism_assertion: {all: [taxon, outcome], any: [gene, compound, material, treatment, interactor, organ_stage, qualifier]}
+  method_resource_result: {all: [outcome], any: [comparator, value]}
+  recommendation: {all: [taxon, outcome]}   # authors' recommendation or management conclusion; outcome = the recommended practice/limit
+direction_policy:
+  numeric_or_comparable_outcome: direction required; prefer the literal change/comparison word in the cited quote; when no word governs the metric (list-style sentences) the model MAY infer it with dir_inf=true using the controlled vocabulary; un only when it cannot be inferred
+  qualitative_state_or_event: direction = na; the observed state goes into outcome; polarity carries the interpreted sign
+  sign_free_wording: '"related to" / "strongly affected" are not direction words: infer with dir_inf=true or record un'
+direction_inferred_vocabulary: [increase, decrease, no_change, higher, lower]
+claim_keys: [id, s, k, es, o, pol, stat, basis, bk, ev, f, rev, dir_inf]   # no `miss`: a field in f is {v, ev} or {miss: nr|na|un}
+field_literal_match: normalized
+evidence_ids: [e0, e1, e2, e3, e4, e5, e6, e7, t0, t1]   # closed id vocabulary (e* abstract, t* title by convention); cross-references are checked by the validator
+buckets: scope-v0.6                    # claim-level multi-label from configs/scope-v0.6.yaml buckets B1-B8
+quote_policy: shortest_contiguous_span_covering_cited_literals; program computes offsets; model never emits offsets
+quote_match_accepted: [exact_raw, exact_normalized]     # fuzzy_candidate goes to the review queue, not to accepted claims
+max_claims_per_abstract: 20            # v0.9: 12 -> 20; output budget, never a target; zero claims is a valid result
+min_claims_per_abstract: 0

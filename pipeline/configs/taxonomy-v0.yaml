@@ -1,0 +1,42 @@
+# Organism normalisation against NCBI Taxonomy (plantclaims_pipeline/taxonomy.py): source, index and matching rules.
+version: taxonomy-v0.6                             # v0.6: the second interactor field of claims-v0.8 is matched too,
+source:
+  name: NCBI Taxonomy
+  base_url: https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/
+  archive: taxdump.tar.gz                          # names.dmp (every name class), nodes.dmp (parent, rank), merged.dmp, delnodes.dmp
+  checksum: taxdump.tar.gz.md5                     # "<md5>  taxdump.tar.gz"; the archive is refused when the digest differs
+  members: [names.dmp, nodes.dmp, merged.dmp, delnodes.dmp]
+  timeout_seconds: 120
+  max_bytes: 400000000                             # the archive is about 65 MB; a response larger than this is refused
+groups:                                            # clades reported for every resolved taxon (anchors resolved by scientific name at index build)
+  plant: Viridiplantae
+  fungus: Fungi
+  oomycete: Oomycota
+  bacterium: Bacteria
+  archaeon: Archaea
+  virus: Viruses
+  animal: Metazoa
+match:
+  fields: [taxon, interactor, interactor_2]        # interactor_2 is absent from older claims; the match is the same as for interactor
+  judge_as: {interactor_2: interactor}             # judgement packets and the layer ledger key interactor_2 spellings as interactor: one item answers both fields
+  group_preference: {taxon: plant}                 # a homonym (the same name for several taxa) in the study-organism field is taken as the green plant when exactly one candidate is
+  name_classes:                                    # NCBI name class → matching method; classes not listed (includes, in-part, authority, type material, blast name) are ignored
+    scientific name: exact
+    synonym: synonym
+    equivalent name: synonym
+    genbank synonym: synonym
+    common name: common_name
+    genbank common name: common_name
+    acronym: acronym
+    genbank acronym: acronym
+  trailing_words: [plant, plants, seedling, seedlings, tree, trees, crop, crops, cultivar, cultivars, variety, varieties, genotype, genotypes,
+                   line, lines, leaf, leaves, seed, seeds, fruit, fruits, root, roots, grain, grains, plantlet, plantlets, callus, calli, cells, cell, species]
+  leading_words: [winter, spring, summer, autumn, irrigated, rainfed, transgenic, cultivated, hybrid, dwarf]   # season/production adjectives only: colours and
+                                                                                     # habitats name other species (red clover, wild rice) and are never stripped
+  list_separators: [' and ', ', ', ' & ', ' / ', ' or ']
+  rescue:                                          # v0.2: tried only for values the rules above leave unresolved; every repair that fires is listed in `rescue`
+    list_separators: ['/', '–', '—']               # separators without spaces ("cotton/soybean", "cotton–wheat", "Rapanea—Hagenia")
+    ncbi_spacing: true                             # v0.5: NCBI common names ignoring spaces and hyphens only; tried last (after the table); v0.4 had ncbi_spacing_plural
+    common_names_file: configs/common-names-v0.1.yaml   # v0.3: inlined into every run's config snapshot by taxonomy.load_config; entries checked against the index
+    near_name_limit: 3                             # an unresolved binomial lists up to this many species of its genus one edit away (judge material, never a decision)
+  hint_limit: 8                                    # an unresolved short value lists up to this many backbone common names ending in it (hints for the judge, never a decision)
